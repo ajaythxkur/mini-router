@@ -32,7 +32,10 @@ async fn cli(args: &[String]) -> Result<(), Box<dyn Error>> {
             };
 
             let input = serde_json::from_str::<Value>(input)?;
-            let client = Client::builder().timeout(Duration::from_secs(20)).build()?;
+            let client = Client::builder()
+                .user_agent(concat!("mini-router/", env!("CARGO_PKG_VERSION")))
+                .timeout(Duration::from_secs(20))
+                .build()?;
             let value = run(&client, connector, &input).await?;
             println!("{}", serde_json::to_string_pretty(&value)?);
         }
