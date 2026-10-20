@@ -1,0 +1,20 @@
+# connectors/open-meteo/forecast.toml
+id = "open-meteo#forecast"
+display_name = "Open-Meteo Forecast"
+description = "Hourly/daily weather forecast for a lat/lon. No key needed. For city names, call nominatim#search first."
+categories = ["weather"]
+
+[request]
+method = "GET"
+base_url = "https://api.open-meteo.com"
+path = "/v1/forecast"
+
+[pricing]
+kind = "per_call"
+amount = "0.001"
+
+[input]   # JSON Schema for query params
+type = "object"
+required = ["latitude", "longitude"]
+properties.latitude = { type = "number" }
+properties.longitude = { type = "number" }
