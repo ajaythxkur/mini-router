@@ -14,6 +14,8 @@ pub enum RunError {
     Http(#[from] reqwest::Error),
     #[error("vendor returned HTTP {status}")]
     Status { status: u16, body: String },
+    #[error("vendor returned invalid JSON")]
+    InvalidResponse(#[source] serde_json::Error),
 }
 
 pub fn validate(connector: &Connector, input: &Value) -> Result<(), RunError> {
@@ -68,6 +70,20 @@ fn query_value(value: &Value) -> Result<Option<String>, RunError> {
     };
 
     Ok(Some(s))
+}
+
+pub async fn run(client: &Client, connector: &Connector, input: &Value) -> Result<Value, RunError> {
+    validate(connector, input)?;
+    let response = build_request(client, connector, input)?.send().await?;
+    let status = response.status();
+    let body = response.text().await?;
+    if !status.is_success() {
+        return Err(RunError::Status {
+            status: status.as_u16(),
+            body,
+        });
+    }
+    serde_json::from_str(&body).map_err(RunError::InvalidResponse)
 }
 
 #[cfg(test)]
@@ -187,6 +203,22 @@ mod tests {
         assert!(
             matches!(err, RunError::InvalidInput(_)),
             "unexpected: {err:?}"
+        );
+    }
+
+    #[tokio::test]
+    #[ignore = "hits the real Open-Meteo API"]
+    async fn live_open_meteo_forecast() {
+        let client = Client::new();
+        let input = json!({ "latitude": 28.6, "longitude": 77.2, "current": "temperature_2m" });
+
+        let value = run(&client, &forecast(), &input)
+            .await
+            .expect("live call should succeed");
+
+        assert!(
+            value["current"]["temperature_2m"].is_number(),
+            "response: {value}"
         );
     }
 }
