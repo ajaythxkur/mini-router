@@ -1,5 +1,7 @@
+use std::collections::HashSet;
+
 use reqwest::{Client, RequestBuilder};
-use serde_json::Value;
+use serde_json::{Map, Value};
 use thiserror::Error;
 
 use crate::connector::{Connector, Method};
@@ -38,15 +40,20 @@ pub fn build_request(
     connector: &Connector,
     input: &Value,
 ) -> Result<RequestBuilder, RunError> {
-    let url = format!("{}{}", connector.request.base_url, connector.request.path);
+    let Some(object) = input.as_object() else {
+        return Err(RunError::InvalidInput("input must be JSON object".into()));
+    };
+    let (path, used) = fill_path(&connector.request.path, object)?;
+    let url = format!("{}{}", connector.request.base_url, path);
+
     match connector.request.method {
         Method::Post => Ok(client.post(url).json(input)),
         Method::Get => {
-            let Some(object) = input.as_object() else {
-                return Err(RunError::InvalidInput("input must be JSON object".into()));
-            };
             let mut req = client.get(url);
             for (key, value) in object {
+                if used.contains(key) {
+                    continue;
+                }
                 if let Some(text) = query_value(value)? {
                     req = req.query(&[(key, text)]);
                 }
@@ -72,6 +79,32 @@ fn query_value(value: &Value) -> Result<Option<String>, RunError> {
     Ok(Some(s))
 }
 
+fn fill_path(
+    path: &str,
+    object: &Map<String, Value>,
+) -> Result<(String, HashSet<String>), RunError> {
+    let mut filled = path.to_string();
+    let mut used = HashSet::new();
+
+    for (key, value) in object {
+        let placeholder = format!("{{{key}}}");
+        if filled.contains(&placeholder) {
+            let Some(text) = query_value(value)? else {
+                continue;
+            };
+            filled = filled.replace(&placeholder, &urlencoding::encode(&text));
+            used.insert(key.clone());
+        }
+    }
+
+    if filled.contains('{') {
+        return Err(RunError::InvalidInput(format!(
+            "missing path parameter in {path}"
+        )));
+    }
+    Ok((filled, used))
+}
+
 pub async fn run(client: &Client, connector: &Connector, input: &Value) -> Result<Value, RunError> {
     validate(connector, input)?;
     let response = build_request(client, connector, input)?.send().await?;
@@ -93,6 +126,13 @@ mod tests {
 
     fn forecast() -> Connector {
         toml::from_str(include_str!("../connectors/open-meteo/forecast.toml")).unwrap()
+    }
+
+    fn with_path(path: &str) -> Connector {
+        let mut c = forecast();
+        c.request.path = path.to_string();
+        c.input = json!({ "type": "object" });
+        c
     }
 
     // validate tests
@@ -203,6 +243,50 @@ mod tests {
         assert!(
             matches!(err, RunError::InvalidInput(_)),
             "unexpected: {err:?}"
+        );
+    }
+
+    #[test]
+    fn fills_and_encodes_path_params() {
+        let c = with_path("/page/summary/{title}");
+        let input = json!({ "title": "New York", "lang": "en" });
+        let req = build_request(&Client::new(), &c, &input)
+            .unwrap()
+            .build()
+            .unwrap();
+
+        assert!(
+            req.url().path().ends_with("/page/summary/New%20York"),
+            "url: {}",
+            req.url()
+        );
+        assert_eq!(req.url().query(), Some("lang=en"));
+    }
+
+    #[test]
+    fn missing_path_param_is_error() {
+        let c = with_path("/page/summary/{title}");
+        let err = build_request(&Client::new(), &c, &json!({})).unwrap_err();
+
+        assert!(
+            matches!(err, RunError::InvalidInput(_)),
+            "unexpected err: {err:?}"
+        );
+    }
+
+    #[test]
+    fn encodes_slashes_in_path_params() {
+        let c = with_path("/page/summary/{title}");
+        let input = json!({ "title": "a/b" });
+        let req = build_request(&Client::new(), &c, &input)
+            .unwrap()
+            .build()
+            .unwrap();
+
+        assert!(
+            req.url().path().ends_with("/page/summary/a%2Fb"),
+            "url: {}",
+            req.url()
         );
     }
 
