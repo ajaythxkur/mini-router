@@ -1075,6 +1075,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "toml",
+ "tower",
  "urlencoding",
  "wiremock",
 ]
