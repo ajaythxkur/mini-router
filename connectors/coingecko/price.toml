@@ -1,0 +1,20 @@
+id = "coingecko#price"
+display_name = "CoinGecko Price"
+description = "Fetch current cryptocurrency prices in one or more fiat currencies using CoinGecko's simple price endpoint."
+categories = ["crypto", "finance", "market-data"]
+
+[request]
+method = "GET"
+base_url = "https://api.coingecko.com"
+path = "/api/v3/simple/price"
+
+[pricing]
+kind = "per_call"
+amount = "0.001"
+
+[input]
+type = "object"
+required = ["ids", "vs_currencies"]
+additionalProperties = false
+properties.ids = { type = "string", minLength = 1, description = "Comma-separated CoinGecko coin IDs, e.g. bitcoin,ethereum." }
+properties.vs_currencies = { type = "string", minLength = 1, description = "Comma-separated target currencies, e.g. usd,inr." }

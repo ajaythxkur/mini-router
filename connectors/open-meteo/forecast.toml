@@ -1,7 +1,6 @@
-# connectors/open-meteo/forecast.toml
 id = "open-meteo#forecast"
 display_name = "Open-Meteo Forecast"
-description = "Hourly/daily weather forecast for a lat/lon. No key needed. For city names, call nominatim#search first."
+description = "Current, hourly and daily weather forecast for a latitude/longitude. Free, no API key. Pass `current` or `hourly` with comma-separated variables (e.g. temperature_2m,wind_speed_10m), otherwise only location metadata is returned. For city names, call nominatim#search first to get coordinates."
 categories = ["weather"]
 
 [request]
@@ -13,12 +12,12 @@ path = "/v1/forecast"
 kind = "per_call"
 amount = "0.001"
 
-[input]   # JSON Schema for query params
+[input]
 type = "object"
 required = ["latitude", "longitude"]
 additionalProperties = false
-properties.latitude = { type = "number", minimum = -90, maximum = 90 }
-properties.longitude = { type = "number", minimum = -180, maximum = 180 }
+properties.latitude = { type = "number", minimum = -90, maximum = 90, description = "Latitude in decimal degrees, e.g. 28.6" }
+properties.longitude = { type = "number", minimum = -180, maximum = 180, description = "Longitude in decimal degrees, e.g. 77.2" }
 properties.current = { type = "string", description = "Comma-separated current variables, e.g. temperature_2m,wind_speed_10m" }
 properties.hourly = { type = "string", description = "Comma-separated hourly variables, e.g. temperature_2m,precipitation" }
-properties.forecast_days = { type = "integer", minimum = 1, maximum = 16 }
+properties.forecast_days = { type = "integer", minimum = 1, maximum = 16, description = "Number of forecast days (default 7)." }

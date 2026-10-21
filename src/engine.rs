@@ -305,4 +305,60 @@ mod tests {
             "response: {value}"
         );
     }
+
+    use wiremock::matchers::{method, path, query_param};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    async fn mock_forecast(response: ResponseTemplate) -> (MockServer, Connector) {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/v1/forecast"))
+            .and(query_param("latitude", "28.6"))
+            .respond_with(response)
+            .mount(&server)
+            .await;
+
+        let mut c = forecast();
+        c.request.base_url = server.uri();
+        (server, c) // return the server too: if it's dropped it shuts down
+    }
+    #[tokio::test]
+    async fn run_returns_vendor_json() {
+        let (_server, c) = mock_forecast(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({ "current": { "temperature_2m": 30.1 }})),
+        )
+        .await;
+
+        let input = json!({ "latitude": 28.6, "longitude": 77.2 });
+        let value = run(&Client::new(), &c, &input).await.unwrap();
+
+        assert_eq!(value["current"]["temperature_2m"], 30.1);
+    }
+
+    #[tokio::test]
+    async fn run_maps_error_status() {
+        let (_server, c) = mock_forecast(ResponseTemplate::new(503).set_body_string("down")).await;
+
+        let input = json!({ "latitude": 28.6, "longitude": 77.2 });
+        let err = run(&Client::new(), &c, &input).await.unwrap_err();
+
+        assert!(
+            matches!(err, RunError::Status { status: 503, ref body } if body == "down"),
+            "unexpected {err:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn run_rejects_non_json() {
+        let (_server, c) =
+            mock_forecast(ResponseTemplate::new(200).set_body_string("<html>")).await;
+        let input = json!({ "latitude": 28.6, "longitude": 77.2 });
+        let err = run(&Client::new(), &c, &input).await.unwrap_err();
+
+        assert!(
+            matches!(err, RunError::InvalidResponse(_)),
+            "unexpected {err:?}"
+        );
+    }
 }

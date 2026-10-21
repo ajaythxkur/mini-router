@@ -1,0 +1,21 @@
+id = "github#search-repos"
+display_name = "GitHub Repository Search"
+description = "Search public GitHub repositories by keywords and qualifiers (e.g. 'axum language:rust stars:>100'). Returns name, description, stars, language and URL. Free, no key, but limited to 10 searches/minute without authentication."
+categories = ["developer-tools", "search", "code"]
+
+[request]
+method = "GET"
+base_url = "https://api.github.com"
+path = "/search/repositories"
+
+[pricing]
+kind = "per_call"
+amount = "0.001"
+
+[input]
+type = "object"
+required = ["q"]
+additionalProperties = false
+properties.q = { type = "string", minLength = 1, description = "GitHub repository search query, e.g. rust web framework." }
+properties.per_page = { type = "integer", minimum = 1, maximum = 100, description = "Maximum number of repositories to return." }
+properties.sort = { type = "string", enum = ["stars", "forks", "updated"], description = "Sort repositories by stars, forks, or last update." }

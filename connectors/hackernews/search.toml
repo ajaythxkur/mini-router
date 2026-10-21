@@ -1,0 +1,21 @@
+id = "hackernews#search"
+display_name = "Hacker News Search"
+description = "Search Hacker News stories, comments, and other items using the Algolia Search API."
+categories = ["search", "news", "developer-tools"]
+
+[request]
+method = "GET"
+base_url = "https://hn.algolia.com"
+path = "/api/v1/search"
+
+[pricing]
+kind = "per_call"
+amount = "0.001"
+
+[input]
+type = "object"
+required = ["query"]
+additionalProperties = false
+properties.query = { type = "string", minLength = 1, description = "Full-text search over titles, text, URLs and authors, e.g. rust async." }
+properties.hitsPerPage = { type = "integer", minimum = 1, maximum = 100, description = "Number of search results to return." }
+properties.tags = { type = "string", description = "Algolia tag filter, e.g. story, comment, or story,author_pg." }

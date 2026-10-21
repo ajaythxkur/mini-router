@@ -1,0 +1,19 @@
+id = "frankfurter#latest"
+display_name = "Frankfurter Latest Exchange Rates"
+description = "Retrieve the latest available foreign exchange rates for a base currency and optional target currencies. Uses the Frankfurter API without an API key."
+categories = ["finance", "currency", "exchange-rates"]
+
+[request]
+method = "GET"
+base_url = "https://api.frankfurter.dev"
+path = "/v1/latest"
+
+[pricing]
+kind = "per_call"
+amount = "0.001"
+
+[input]
+type = "object"
+additionalProperties = false
+properties.base = { type = "string", minLength = 3, maxLength = 3, description = "Three-letter ISO 4217 base currency code, e.g. USD." }
+properties.symbols = { type = "string", description = "Comma-separated target currency codes, e.g. INR,EUR." }

@@ -1,0 +1,19 @@
+id = "npm#package"
+display_name = "npm Package Metadata"
+description = "Latest published version of an npm package: version, description, dependencies, license and repository. Free, no key. Returns 404 if the package doesn't exist."
+categories = ["developer-tools", "npm", "packages"]
+
+[request]
+method = "GET"
+base_url = "https://registry.npmjs.org"
+path = "/{name}/latest"
+
+[pricing]
+kind = "per_call"
+amount = "0.001"
+
+[input]
+type = "object"
+required = ["name"]
+additionalProperties = false
+properties.name = { type = "string", minLength = 1, description = "npm package name, e.g. express or @types/node (scoped names work)." }
