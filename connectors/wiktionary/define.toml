@@ -1,0 +1,19 @@
+id = "wiktionary#define"
+display_name = "Wiktionary Definition"
+description = "Word definitions from Wiktionary, grouped by language code (English entries are under en). Each entry has partOfSpeech and definitions; definition text contains HTML markup. Free, no key. Returns 404 for unknown words."
+categories = ["dictionary", "language", "education"]
+
+[request]
+method = "GET"
+base_url = "https://en.wiktionary.org"
+path = "/api/rest_v1/page/definition/{word}"
+
+[pricing]
+kind = "per_call"
+amount = "0.001"
+
+[input]
+type = "object"
+required = ["word"]
+additionalProperties = false
+properties.word = { type = "string", minLength = 1, description = "e.g. hello." }
