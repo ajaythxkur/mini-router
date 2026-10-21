@@ -27,6 +27,27 @@ $ cargo run -- run open-meteo#forecast '{"latitude":500,"longitude":77.2}'
 error: invalid input: /latitude: 500 is greater than the maximum of 90
 ```
 
+### HTTP API
+
+```bash
+cargo run -- serve        # listens on http://0.0.0.0:8080
+```
+
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/health` | Liveness check |
+| GET | `/discover?q=weather` | Ranked search; omit `q` to list all |
+| GET | `/connectors/{provider}/{endpoint}` | Full connector details and input schema |
+| POST | `/connectors/{provider}/{endpoint}/run` | Run with a JSON body as input |
+
+```bash
+curl -s -X POST localhost:8080/connectors/open-meteo/forecast/run \
+  -H 'content-type: application/json' \
+  -d '{"latitude":52.52,"longitude":13.41,"current":"temperature_2m"}'
+```
+
+Errors are JSON: `{"error":{"code":"invalid_input","message":"..."}}`; vendor failures also include `vendor_status`.
+
 ## Connectors
 
 12 free, keyless APIs:
