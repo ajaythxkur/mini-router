@@ -1,0 +1,19 @@
+id = "pypi#package"
+display_name = "PyPI Package Metadata"
+description = "Metadata for a Python package on PyPI: latest version, summary, license, project URLs, required Python version and release files. Free, no key. Returns 404 if the package doesn't exist; names are case-insensitive."
+categories = ["developer-tools", "packages", "python"]
+
+[request]
+method = "GET"
+base_url = "https://pypi.org"
+path = "/pypi/{name}/json"
+
+[pricing]
+kind = "per_call"
+amount = "0.001"
+
+[input]
+type = "object"
+required = ["name"]
+additionalProperties = false
+properties.name = { type = "string", minLength = 1, description = "Package name as published on PyPI, e.g. requests or fastapi." }

@@ -1,0 +1,20 @@
+id = "openlibrary#search"
+display_name = "Open Library Search"
+description = "Search the Open Library catalog for books, authors, titles, and other bibliographic records."
+categories = ["books", "search", "education"]
+
+[request]
+method = "GET"
+base_url = "https://openlibrary.org"
+path = "/search.json"
+
+[pricing]
+kind = "per_call"
+amount = "0.001"
+
+[input]
+type = "object"
+required = ["q"]
+additionalProperties = false
+properties.q = { type = "string", minLength = 1, description = "Book, author, title, or other catalog search query." }
+properties.limit = { type = "integer", minimum = 1, maximum = 100, description = "Maximum number of search results to return." }

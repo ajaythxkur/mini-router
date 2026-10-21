@@ -1,0 +1,19 @@
+id = "wikipedia#summary"
+display_name = "Wikipedia Summary"
+description = "Short summary, description and thumbnail of an English Wikipedia article. Free, no key. The title must match an article exactly (redirects are followed); returns 404 otherwise."
+categories = ["knowledge"]
+
+[request]
+method = "GET"
+base_url = "https://en.wikipedia.org"
+path = "/api/rest_v1/page/summary/{title}"
+
+[pricing]
+kind = "per_call"
+amount = "0.0005"
+
+[input]
+type = "object"
+required = ["title"]
+additionalProperties = false
+properties.title = { type = "string", minLength = 1, description = "Exact article title, e.g. 'Rust (programming language)'" }
