@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, time::Duration};
 
 use reqwest::{Client, RequestBuilder};
 use serde_json::{Map, Value};
@@ -117,6 +117,14 @@ pub async fn run(client: &Client, connector: &Connector, input: &Value) -> Resul
         });
     }
     serde_json::from_str(&body).map_err(RunError::InvalidResponse)
+}
+
+pub fn http_client() -> Result<Client, reqwest::Error> {
+    let client = Client::builder()
+        .user_agent(concat!("mini-router/", env!("CARGO_PKG_VERSION")))
+        .timeout(Duration::from_secs(20))
+        .build()?;
+    Ok(client)
 }
 
 #[cfg(test)]
