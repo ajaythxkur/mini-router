@@ -63,7 +63,7 @@ Errors are JSON: `{"error":{"code":"invalid_input","message":"..."}}`; vendor fa
 | `frankfurter#latest` | Currency exchange rates |
 | `openlibrary#search` | Book search |
 | `crossref#works` | Research paper metadata |
-| `dictionary#define` | English definitions |
+| `wiktionary#define` | Any language definitions |
 | `npm#package` | npm package metadata |
 | `pypi#package` | PyPI package metadata |
 
