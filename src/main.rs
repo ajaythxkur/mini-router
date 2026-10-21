@@ -1,8 +1,7 @@
-use reqwest::Client;
 use serde_json::Value;
-use std::{error::Error, path::Path, process::ExitCode, time::Duration};
+use std::{error::Error, path::Path, process::ExitCode};
 
-use mini_router::engine::run;
+use mini_router::engine::{http_client, run};
 use mini_router::loader::load_connectors;
 
 #[tokio::main]
@@ -30,16 +29,16 @@ async fn cli(args: &[String]) -> Result<(), Box<dyn Error>> {
             let Some(connector) = connectors.iter().find(|c| c.id == *id) else {
                 return Err(format!("unknown connector: {id}").into());
             };
-
             let input = serde_json::from_str::<Value>(input)?;
-            let client = Client::builder()
-                .user_agent(concat!("mini-router/", env!("CARGO_PKG_VERSION")))
-                .timeout(Duration::from_secs(20))
-                .build()?;
-            let value = run(&client, connector, &input).await?;
+            let value = run(&http_client()?, connector, &input).await?;
             println!("{}", serde_json::to_string_pretty(&value)?);
         }
-        _ => return Err("usage: mini-router list | run <connector-id> '<json-input>'".into()),
+        [_, cmd] if cmd == "serve" => mini_router::server::server("0.0.0.0:8080").await?,
+        _ => {
+            return Err(
+                "usage: mini-router list | run <connector-id> '<json-input>' | serve".into(),
+            );
+        }
     }
     Ok(())
 }
