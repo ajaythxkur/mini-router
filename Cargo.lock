@@ -1066,6 +1066,20 @@ name = "mini-router"
 version = "0.2.0"
 dependencies = [
  "axum",
+ "mini-router-core",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "toml",
+ "tower",
+]
+
+[[package]]
+name = "mini-router-core"
+version = "0.2.0"
+dependencies = [
  "jsonschema",
  "reqwest",
  "rust_decimal",
@@ -1075,7 +1089,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "toml",
- "tower",
  "urlencoding",
  "wiremock",
 ]

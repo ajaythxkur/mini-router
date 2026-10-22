@@ -5,15 +5,15 @@ use axum::{
     body::{Body, to_bytes},
     http::{Request, StatusCode},
 };
-use mini_router::{
-    loader,
-    server::{AppState, router},
-};
+use mini_router::server::{AppState, router};
+use mini_router_core::loader;
+
 use serde_json::Value;
 use tower::ServiceExt;
 
 fn test_app() -> Router {
-    let connectors = loader::load_connectors(std::path::Path::new("connectors"))
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../connectors");
+    let connectors = loader::load_connectors(&dir)
         .unwrap()
         .into_iter()
         .map(|c| (c.id.clone(), c))

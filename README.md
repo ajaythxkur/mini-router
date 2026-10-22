@@ -95,6 +95,15 @@ properties.title = { type = "string", minLength = 1 }
 
 `cargo test` checks that every connector file loads and has a valid schema.
 
+## Project layout
+
+```
+crates/
+├── core/     mini-router-core: connector format, loader, run engine (no HTTP server)
+└── server/   mini-router: CLI and HTTP API (axum)
+connectors/   connector definitions (TOML)
+```
+
 ## Design decisions
 
 - **Connectors as data.** No per-vendor code; the engine is the same for every tool.
