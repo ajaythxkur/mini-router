@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::{collections::HashMap, sync::Arc};
 
-use crate::{
+use mini_router_core::{
     connector::{Connector, Pricing},
     engine::{RunError, http_client, run},
     loader,
@@ -194,7 +194,7 @@ mod tests {
     #[test]
     fn weather_matches_category_and_description() {
         let c: Connector =
-            toml::from_str(include_str!("../connectors/open-meteo/forecast.toml")).unwrap();
+            toml::from_str(include_str!("../../../connectors/open-meteo/forecast.toml")).unwrap();
         let words = vec!["weather".to_string()];
         let score = score(&c, &words);
         assert_eq!(score, 4);

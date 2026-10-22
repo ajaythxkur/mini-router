@@ -1,11 +1,9 @@
-use std::path::Path;
-
-use mini_router::loader::load_connectors;
+use mini_router_core::loader::load_connectors;
 
 #[test]
 fn all_connector_files_are_valid() {
-    let connectors =
-        load_connectors(Path::new("connectors")).expect("all connector files should load");
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../connectors");
+    let connectors = load_connectors(&dir).expect("all connector files should load");
 
     for c in &connectors {
         jsonschema::validator_for(&c.input)

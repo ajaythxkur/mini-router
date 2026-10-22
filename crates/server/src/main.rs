@@ -1,8 +1,8 @@
 use serde_json::Value;
 use std::{error::Error, path::Path, process::ExitCode};
 
-use mini_router::engine::{http_client, run};
-use mini_router::loader::load_connectors;
+use mini_router_core::engine::{http_client, run};
+use mini_router_core::loader::load_connectors;
 
 #[tokio::main]
 async fn main() -> ExitCode {

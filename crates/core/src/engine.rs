@@ -133,7 +133,7 @@ mod tests {
     use serde_json::json;
 
     fn forecast() -> Connector {
-        toml::from_str(include_str!("../connectors/open-meteo/forecast.toml")).unwrap()
+        toml::from_str(include_str!("../../../connectors/open-meteo/forecast.toml")).unwrap()
     }
 
     fn with_path(path: &str) -> Connector {
