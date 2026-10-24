@@ -33,6 +33,11 @@ pub enum PaymentError {
     ProviderUnreachable(String),
 }
 
+/// A payment rail (NEAR, Stripe, ...). Implemented outside this crate.
+///
+/// Not dyn compatible: `verify` returns `impl Future`, so the server takes
+/// the provider as a generic parameter (one rail per binary). Implementations
+/// must not reuse proofs; the server also enforces that.
 pub trait PaymentProvider: Send + Sync {
     fn name(&self) -> &str;
     fn instructions(&self, quote: &Quote) -> serde_json::Value;
