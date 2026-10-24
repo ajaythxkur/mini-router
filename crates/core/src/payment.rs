@@ -1,6 +1,9 @@
 use rust_decimal::Decimal;
 use serde::Serialize;
 use serde_json::json;
+use uuid::Uuid;
+
+use crate::connector::{Connector, Pricing};
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct Quote {
@@ -68,6 +71,20 @@ impl PaymentProvider for TestProvider {
     }
 }
 
+impl Quote {
+    /// Upfront price for one run. `None` if the price is only known after running.
+    pub fn for_connector(connector: &Connector) -> Option<Quote> {
+        match connector.pricing {
+            Pricing::PerCall { amount } => Some(Quote {
+                id: Uuid::new_v4().to_string(),
+                connector_id: connector.id.clone(),
+                amount_usd: amount,
+            }),
+            Pricing::PerResult { .. } => None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -84,8 +101,8 @@ mod tests {
     async fn accepts_matching_proof() {
         let quote = quote();
         let receipt = TestProvider.verify(&quote, "test-paid:q1").await.unwrap();
-        assert_eq!(receipt.reference, quote.id);
-        assert_eq!(quote.amount_usd, receipt.amount_usd);
+        assert_eq!(receipt.reference, "test-paid:q1");
+        assert_eq!(receipt.amount_usd, quote.amount_usd);
     }
 
     #[tokio::test]
@@ -104,5 +121,33 @@ mod tests {
             matches!(err, PaymentError::InvalidProof(ref proof) if proof == "garbage"),
             "unexpected: {err}"
         );
+    }
+
+    fn forecast() -> Connector {
+        toml::from_str(include_str!("../../../connectors/open-meteo/forecast.toml")).unwrap()
+    }
+
+    #[test]
+    fn quotes_per_call_connector() {
+        let quote = Quote::for_connector(&forecast()).unwrap();
+        assert_eq!(quote.connector_id, "open-meteo#forecast");
+        assert_eq!(quote.amount_usd, Decimal::new(1, 3));
+    }
+
+    #[test]
+    fn quote_ids_are_unique() {
+        let q1 = Quote::for_connector(&forecast()).unwrap();
+        let q2 = Quote::for_connector(&forecast()).unwrap();
+        assert_ne!(q1.id, q2.id);
+    }
+
+    #[test]
+    fn per_result_has_no_upfront_quote() {
+        let mut c = forecast();
+        c.pricing = Pricing::PerResult {
+            amount: Decimal::new(1, 3),
+            flat_fee: None,
+        };
+        assert!(Quote::for_connector(&c).is_none());
     }
 }
